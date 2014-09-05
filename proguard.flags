@@ -1,3 +1,5 @@
--keep class com.vanir.updater.UpdatesSettings {
+-keep class org.teameos.updater.UpdatesSettings {
   *;
 }
+
+-keep public class * extends org.teameos.updater.service.BaseQueryParser

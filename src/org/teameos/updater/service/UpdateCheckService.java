@@ -86,6 +86,7 @@ public class UpdateCheckService extends IntentService {
 
     //private HttpRequestExecutor mHttpExecutor;
     private HttpClient client = new DefaultHttpClient();
+    private BaseQueryParser mParser;
 
     public UpdateCheckService() {
         super("UpdateCheckService");
@@ -141,6 +142,35 @@ public class UpdateCheckService extends IntentService {
             nm.notify(progressID, progress.build());
         }
 
+        // load our query parser class
+        final String clsName = getString(R.string.conf_project_update_list_class);
+        Log.i(TAG, "trying to load class " + String.valueOf(clsName));
+        if (clsName == null || clsName.length() == 0) {
+            Log.e(TAG, "Could not get query parser class name from config");
+            return;
+        }
+        Class<?> cls = null;
+        try {
+            cls = getClassLoader().loadClass(clsName);
+            Log.i(TAG, "Sucessfully loaded class " + String.valueOf(clsName));
+        } catch (Throwable t) {
+            Log.e(TAG, "Could not load query parser class");
+            return;
+        }
+        try {
+        mParser = (BaseQueryParser) cls.newInstance();
+        Log.i(TAG, "Trying to initialize " + String.valueOf(clsName));
+        } catch (Exception e){
+            Log.i(TAG, "Failed to initialize " + String.valueOf(clsName));
+            return;
+        }
+        if (mParser == null) {
+            Log.e(TAG, "Could not create instance query parser class");
+            return;
+        }
+        Log.i(TAG, "Sucessfully initialized class " + String.valueOf(clsName));
+        mParser.init(this);
+
         // Start the update check
         Intent finishedIntent = new Intent(ACTION_CHECK_FINISHED);
         LinkedList<UpdateInfo> availableUpdates;
@@ -168,7 +198,7 @@ public class UpdateCheckService extends IntentService {
 
         // Write to log
         Log.i(TAG, "The update check successfully completed at " + d + " and found "
-                + availableUpdates.size() + " updates ("
+                + availableUpdates.size()  + " updates ("
                 + realUpdateCount + " newer than installed)");
 
         if (realUpdateCount == 0 && fromQuicksettings) {
@@ -271,14 +301,6 @@ public class UpdateCheckService extends IntentService {
         sendBroadcast(finishedIntent);
     }
 
-    private void addRequestHeaders(HttpRequestBase request) {
-        String userAgent = Utils.getUserAgentString(this);
-        if (userAgent != null) {
-            request.addHeader("User-Agent", userAgent);
-        }
-        request.addHeader("Cache-Control", "no-cache");
-    }
-
     private LinkedList<UpdateInfo> getAvailableUpdatesAndFillIntent(Intent intent) throws IOException {
         // Get the type of update we should check for
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
@@ -286,7 +308,7 @@ public class UpdateCheckService extends IntentService {
         int updateType = prefs.getInt(Constants.UPDATE_TYPE_PREF, 0);
 
         LinkedList<UpdateInfo> lastUpdates = State.loadState(this);
-        LinkedList<UpdateInfo> updates = getUpdateInfos();
+        LinkedList<UpdateInfo> updates = mParser.getUpdateInfo();
 
         int newUpdates = 0, realUpdates = 0;
         for (UpdateInfo ui : updates) {
@@ -306,40 +328,5 @@ public class UpdateCheckService extends IntentService {
         State.saveState(this, updates);
 
         return updates;
-    }
-
-    private LinkedList<UpdateInfo> getUpdateInfos() {
-        LinkedList<UpdateInfo> infos = null;
-        String query = Utils.getQueryUrl(this, 0, Constants.UPDATE_MAX_FILE_HISTORY);
-        String response = getHttpResponse(query);
-        if (response == null)
-            return null;
-        try {
-            infos = Utils.getUpdateInfo(response);
-            for (UpdateInfo info : infos) {
-                Log.i(TAG, info.toString());
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-        return infos;
-    }
-
-    private String getHttpResponse(String query) {
-        HttpGet request = new HttpGet(query);
-        HttpResponse response;
-        String result = null;
-        try {
-            response = client.execute(request);
-            HttpEntity entity = response.getEntity();
-            if (entity != null) {
-                InputStream instream = entity.getContent();
-                result = Utils.convertStreamToString(instream);
-                instream.close();
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-        return result;
     }
 }

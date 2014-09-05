@@ -112,7 +112,6 @@ public class UpdateInfo implements Parcelable, Serializable {
         }
 
         int installedApiLevel = Utils.getInstalledApiLevel();
-        Log.i("UpdateInfo", "Installed api level = " + String.valueOf(installedApiLevel));
         if (installedApiLevel != mApiLevel && mApiLevel > 0) {
             mIsNewerThanInstalled = mApiLevel > installedApiLevel;
         } else {
