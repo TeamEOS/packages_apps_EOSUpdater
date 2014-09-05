@@ -7,17 +7,19 @@
  * or at https://www.gnu.org/licenses/gpl-2.0.txt
  */
 
-package com.vanir.updater.misc;
+package org.teameos.updater.misc;
 
 import android.content.Context;
 import android.os.Parcel;
 import android.os.Parcelable;
 import android.text.TextUtils;
+import android.util.Log;
 
-import com.vanir.updater.utils.Utils;
 
 import java.io.File;
 import java.io.Serializable;
+
+import org.teameos.updater.utils.Utils;
 
 public class UpdateInfo implements Parcelable, Serializable {
     private static final long serialVersionUID = 5499890003569313403L;
@@ -110,6 +112,7 @@ public class UpdateInfo implements Parcelable, Serializable {
         }
 
         int installedApiLevel = Utils.getInstalledApiLevel();
+        Log.i("UpdateInfo", "Installed api level = " + String.valueOf(installedApiLevel));
         if (installedApiLevel != mApiLevel && mApiLevel > 0) {
             mIsNewerThanInstalled = mApiLevel > installedApiLevel;
         } else {

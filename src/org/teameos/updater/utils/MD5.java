@@ -7,7 +7,7 @@
  * or at https://www.gnu.org/licenses/gpl-2.0.txt
  */
 
-package com.vanir.updater.utils;
+package org.teameos.updater.utils;
 
 import android.text.TextUtils;
 import android.util.Log;

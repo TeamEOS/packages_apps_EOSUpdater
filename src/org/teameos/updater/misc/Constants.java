@@ -7,11 +7,11 @@
  * or at https://www.gnu.org/licenses/gpl-2.0.txt
  */
 
-package com.vanir.updater.misc;
+package org.teameos.updater.misc;
 
 public class Constants {
     // Download related
-    public static final String UPDATES_FOLDER = "vanirupdater";
+    public static final String UPDATES_FOLDER = "eos_updates";
     public static final String DOWNLOAD_ID = "download_id";
     public static final String DOWNLOAD_MD5 = "download_md5";
 
@@ -19,7 +19,7 @@ public class Constants {
     public static final String ENABLE_PREF = "pref_enable_updates";
     public static final String BACKUP_PREF = "pref_backup_rom";
     public static final String UPDATE_CHECK_PREF = "pref_update_check_interval";
-    public static final String UPDATE_TYPE_PREF = "vanir_pref_update_types";//"pref_update_types";
+    public static final String UPDATE_TYPE_PREF = "eos_pref_update_types";//"pref_update_types";
     public static final String LAST_UPDATE_CHECK_PREF = "pref_last_update_check";
 
     // Update Check items
@@ -37,4 +37,5 @@ public class Constants {
     public static final int UPDATE_TYPE_NEW_NIGHTLY = 0;//1;
     //public static final int UPDATE_TYPE_ALL_STABLE = 2;
     public static final int UPDATE_TYPE_ALL_NIGHTLY = 1;//3;
+    public static final int UPDATE_MAX_FILE_HISTORY = 5;
 }

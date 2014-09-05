@@ -7,7 +7,7 @@
  * or at https://www.gnu.org/licenses/gpl-2.0.txt
  */
 
-package com.vanir.updater;
+package org.teameos.updater;
 
 import android.app.AlertDialog;
 import android.content.Context;
@@ -25,9 +25,11 @@ import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.vanir.updater.misc.UpdateInfo;
+import org.teameos.updater.R;
 
 import java.io.File;
+
+import org.teameos.updater.misc.UpdateInfo;
 
 public class UpdatePreference extends Preference implements OnClickListener, OnLongClickListener {
     private static final float DISABLED_ALPHA = 0.4f;

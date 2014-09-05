@@ -7,7 +7,7 @@
  * or at https://www.gnu.org/licenses/gpl-2.0.txt
  */
 
-package com.vanir.updater.utils;
+package org.teameos.updater.utils;
 
 import android.app.AlarmManager;
 import android.app.NotificationManager;
@@ -28,13 +28,12 @@ import android.os.storage.StorageVolume;
 import android.preference.PreferenceManager;
 import android.util.Log;
 
-import com.vanir.updater.R;
-import com.vanir.updater.misc.Constants;
-import com.vanir.updater.service.UpdateCheckService;
+import org.teameos.updater.R;
 
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.InputStreamReader;
 
@@ -42,6 +41,12 @@ import java.net.URL;
 import java.net.MalformedURLException;
 
 import java.util.LinkedList;
+
+import org.json.JSONArray;
+import org.json.JSONObject;
+import org.teameos.updater.misc.Constants;
+import org.teameos.updater.misc.UpdateInfo;
+import org.teameos.updater.service.UpdateCheckService;
 
 public class Utils {
     private Utils() {
@@ -221,5 +226,87 @@ public class Utils {
         } catch (IOException e) {
         }
         return ret;
+    }
+
+    public static String getBaseUrl(Context context) {
+        return context.getResources().getString(R.string.conf_update_server_base_url);
+    }
+
+    public static String getFileListUrlPath(Context context) {
+        return context.getResources().getString(R.string.conf_update_server_file_url);
+    }
+
+    public static String getFullFileListUrl(Context context) {
+        String base = getBaseUrl(context);
+        String filePath = getFileListUrlPath(context);
+        return base + filePath;
+    }
+
+    public static String convertStreamToString(InputStream is) {
+        BufferedReader reader = new BufferedReader(new InputStreamReader(is));
+        StringBuilder sb = new StringBuilder();
+
+        String line = null;
+        try {
+            while ((line = reader.readLine()) != null) {
+                sb.append(line + "\n");
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        } finally {
+            try {
+                is.close();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+        return sb.toString();
+    }
+
+    public static String getQueryUrl(Context context, int start, int fileCount) {
+        StringBuilder b = new StringBuilder();
+        b.append(getFullFileListUrl(context));
+        b.append("?start=");
+        b.append(String.valueOf(start));
+        b.append("&size=");
+        b.append(String.valueOf(fileCount));
+        b.append("&device=");
+        b.append(getDeviceType());
+        b.append("&info=device,id,date,epoch,owner,name,version,url,size,download_count,md5sum,old_version");
+        return b.toString();
+    }
+
+    public static LinkedList<UpdateInfo> getUpdateInfo(String json) {
+        String baseUrl = "http://eos.cybolabs.co.uk/";  // temp
+        LinkedList<UpdateInfo> updateInfo = null;
+        try {
+            updateInfo = new LinkedList<UpdateInfo>();
+            JSONObject baseObj = new JSONObject(json);
+            JSONObject data = baseObj.getJSONObject("data");
+            JSONArray fileList = data.getJSONArray("file_list");
+            for (int i = 0; i < fileList.length(); i++) {
+                JSONObject file = fileList.getJSONObject(i);
+                int id = file.getInt("id");
+                //String date = file.getString("date");
+                long epoch = file.getLong("epoch");
+                //String owner = file.getString("owner");
+                //String device = file.getString("device");
+                String name = file.getString("name");
+                //String version = file.getString("version");
+                //int sdk = file.getInt("sdk"); not on deck yet
+                int sdk = 19;
+                String url = baseUrl + file.getString("url");
+                //String size = file.getString("size");
+                //String dlCount = file.getString("download_count");
+                String md5 = file.getString("md5sum");
+                //String oldVersion = file.getString("old_version");
+                UpdateInfo info = new UpdateInfo(name, epoch, sdk, url, md5,
+                        UpdateInfo.Type.NIGHTLY);
+                updateInfo.add(info);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return updateInfo;
     }
 }

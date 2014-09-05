@@ -7,7 +7,7 @@
  * or at https://www.gnu.org/licenses/gpl-2.0.txt
  */
 
-package com.vanir.updater.service;
+package org.teameos.updater.service;
 
 import android.app.IntentService;
 import android.app.Notification;
@@ -25,14 +25,7 @@ import android.text.TextUtils;
 import android.util.Log;
 import android.widget.Toast;
 
-import com.vanir.updater.R;
-import com.vanir.updater.UpdateApplication;
-import com.vanir.updater.UpdatesSettings;
-import com.vanir.updater.misc.Constants;
-import com.vanir.updater.misc.State;
-import com.vanir.updater.misc.UpdateInfo;
-import com.vanir.updater.receiver.DownloadReceiver;
-import com.vanir.updater.utils.Utils;
+import org.teameos.updater.R;
 
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
@@ -47,11 +40,19 @@ import org.apache.http.util.EntityUtils;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
+import org.teameos.updater.UpdateApplication;
+import org.teameos.updater.UpdatesSettings;
+import org.teameos.updater.misc.Constants;
+import org.teameos.updater.misc.State;
+import org.teameos.updater.misc.UpdateInfo;
+import org.teameos.updater.receiver.DownloadReceiver;
+import org.teameos.updater.utils.Utils;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.net.URI;
 import java.util.Collections;
@@ -68,11 +69,11 @@ public class UpdateCheckService extends IntentService {
     private static final boolean TESTING_DOWNLOAD = false;
 
     // request actions
-    public static final String ACTION_CHECK = "com.vanir.vanirupdater.action.CHECK";
-    public static final String ACTION_CANCEL_CHECK = "com.vanir.vanirupdater.action.CANCEL_CHECK";
+    public static final String ACTION_CHECK = "org.teameos.updater.action.CHECK";
+    public static final String ACTION_CANCEL_CHECK = "org.teameos.updater.action.CANCEL_CHECK";
 
     // broadcast actions
-    public static final String ACTION_CHECK_FINISHED = "com.vanir.vanirupdater.action.UPDATE_CHECK_FINISHED";
+    public static final String ACTION_CHECK_FINISHED = "org.teameos.updater.action.UPDATE_CHECK_FINISHED";
     // extra for ACTION_CHECK_FINISHED: total amount of found updates
     public static final String EXTRA_UPDATE_COUNT = "update_count";
     // extra for ACTION_CHECK_FINISHED: amount of updates that are newer than what is installed
@@ -84,6 +85,7 @@ public class UpdateCheckService extends IntentService {
     private static final int EXPANDED_NOTIF_UPDATE_COUNT = 4;
 
     //private HttpRequestExecutor mHttpExecutor;
+    private HttpClient client = new DefaultHttpClient();
 
     public UpdateCheckService() {
         super("UpdateCheckService");
@@ -284,10 +286,7 @@ public class UpdateCheckService extends IntentService {
         int updateType = prefs.getInt(Constants.UPDATE_TYPE_PREF, 0);
 
         LinkedList<UpdateInfo> lastUpdates = State.loadState(this);
-
-        LinkedList<UpdateInfo> updates = getUpdateInfos(getString(R.string.conf_release_server_url)+Utils.getDeviceType()+"/", updateType);
-
-        updates.addAll(getUpdateInfos(getString(R.string.conf_nightly_server_url)+Utils.getDeviceType()+"/", updateType));
+        LinkedList<UpdateInfo> updates = getUpdateInfos();
 
         int newUpdates = 0, realUpdates = 0;
         for (UpdateInfo ui : updates) {
@@ -309,261 +308,38 @@ public class UpdateCheckService extends IntentService {
         return updates;
     }
 
-    private LinkedList<UpdateInfo> getUpdateInfos(String url, int updateType) {
-        boolean includeAll = updateType == Constants.UPDATE_TYPE_ALL_NIGHTLY;
-            //|| updateType == Constants.UPDATE_TYPE_ALL_STABLE;
-        Log.d(TAG, "Looking for updates at "+url+"vanir_update_list");
-        LinkedList<String> versions = Utils.readMultilineFile(url+"vanir_updater_list");
-        LinkedList<UpdateInfo> infos = new LinkedList<UpdateInfo>();        
-        for (String v : versions) {
-            Log.d(TAG, "Fetching info for build "+v);
-            UpdateInfo ui = getUpdateInfo(url, v);
-            if (ui != null) {
-                if (!includeAll && !ui.isNewerThanInstalled()) {
-                     Log.d(TAG, "Build " + ui.getFileName() + " is older than the installed build");
-                     continue;
-                }
-                infos.add(ui);
-            } else {
-                Log.e(TAG, "getUpdateInfo returned null UpdateInfo");
+    private LinkedList<UpdateInfo> getUpdateInfos() {
+        LinkedList<UpdateInfo> infos = null;
+        String query = Utils.getQueryUrl(this, 0, Constants.UPDATE_MAX_FILE_HISTORY);
+        String response = getHttpResponse(query);
+        if (response == null)
+            return null;
+        try {
+            infos = Utils.getUpdateInfo(response);
+            for (UpdateInfo info : infos) {
+                Log.i(TAG, info.toString());
             }
+        } catch (Exception e) {
+            e.printStackTrace();
         }
         return infos;
     }
 
-    private UpdateInfo getUpdateInfo(String urlBase, String version) {
-        Log.v(TAG, "getting update info for: "+urlBase+version+"*");
-        UpdateInfo ui = null;
-        String md5sum = Utils.readFile(urlBase+version+".zip.md5");
-        if (md5sum == null) md5sum = Utils.readFile(urlBase+version+".zip.md5sum");
-        String utcStr = Utils.readFile(urlBase+version+".utc");
-        String apiStr = Utils.readFile(urlBase+version+".api");
-        if (md5sum != null && utcStr != null && apiStr != null) {
-            Log.i(TAG, version+" INFO -- md5:"+md5sum+" utc:"+utcStr+" api:"+apiStr);
-            try {
-                long utc = Long.valueOf(utcStr).longValue();
-                int api = Integer.valueOf(apiStr).intValue();
-                ui = new UpdateInfo(version+".zip", utc, api, urlBase+version+".zip", md5sum, UpdateInfo.Type.NIGHTLY);
-            } catch (Exception anyexception) {
-                Log.e(TAG, "getUpdateInfo()", anyexception);
-            }
-        } else {
-            if (md5sum == null) Log.w(TAG, version+": NO MD5");
-            if (utcStr == null) Log.w(TAG, version+": NO DATE");
-            if (apiStr == null) Log.w(TAG, version+": NO API LEVEL");
-        }
-        
-        return ui;
-    }
-
-    /*private JSONObject buildUpdateRequest(int updateType) throws JSONException {
-        JSONArray channels = new JSONArray();
-        channels.put("stable");
-        channels.put("snapshot");
-        channels.put("RC");
-        if (updateType == Constants.UPDATE_TYPE_NEW_NIGHTLY
-                || updateType == Constants.UPDATE_TYPE_ALL_NIGHTLY) {
-            channels.put("nightly");
-        }
-
-        JSONObject params = new JSONObject();
-        params.put("device", TESTING_DOWNLOAD ? "cmtestdevice" : Utils.getDeviceType());
-        params.put("channels", channels);
-
-        JSONObject request = new JSONObject();
-        request.put("method", "get_all_builds");
-        request.put("params", params);
-
-        return request;
-    }
-
-    private LinkedList<UpdateInfo> parseJSON(String jsonString, int updateType) {
-        LinkedList<UpdateInfo> updates = new LinkedList<UpdateInfo>();
+    private String getHttpResponse(String query) {
+        HttpGet request = new HttpGet(query);
+        HttpResponse response;
+        String result = null;
         try {
-            JSONObject result = new JSONObject(jsonString);
-            JSONArray updateList = result.getJSONArray("result");
-            int length = updateList.length();
-
-            Log.d(TAG, "Got update JSON data with " + length + " entries");
-
-            for (int i = 0; i < length; i++) {
-                if (mHttpExecutor.isAborted()) {
-                    break;
-                }
-                if (updateList.isNull(i)) {
-                    continue;
-                }
-                JSONObject item = updateList.getJSONObject(i);
-                UpdateInfo info = parseUpdateJSONObject(item, updateType);
-                if (info != null) {
-                    updates.add(info);
-                }
-            }
-        } catch (JSONException e) {
-            Log.e(TAG, "Error in JSON result", e);
-        }
-        return updates;
-    }
-
-    private UpdateInfo parseUpdateJSONObject(JSONObject obj, int updateType) throws JSONException {
-        String fileName = obj.getString("filename");
-        String url = obj.getString("url");
-        String md5 = obj.getString("md5sum");
-        int apiLevel = obj.getInt("api_level");
-        long timestamp = obj.getLong("timestamp");
-        String typeString = obj.getString("channel");
-        UpdateInfo.Type type;
-
-        if (TextUtils.equals(typeString, "stable")) {
-            type = UpdateInfo.Type.STABLE;
-        } else if (TextUtils.equals(typeString, "RC")) {
-            type = UpdateInfo.Type.RC;
-        } else if (TextUtils.equals(typeString, "snapshot")) {
-            type = UpdateInfo.Type.SNAPSHOT;
-        } else if (TextUtils.equals(typeString, "nightly")) {
-            type = UpdateInfo.Type.NIGHTLY;
-        } else {
-            type = UpdateInfo.Type.UNKNOWN;
-        }
-
-        UpdateInfo ui = new UpdateInfo(fileName, timestamp, apiLevel, url, md5, type);
-        boolean includeAll = updateType == Constants.UPDATE_TYPE_ALL_STABLE
-            || updateType == Constants.UPDATE_TYPE_ALL_NIGHTLY;
-
-        if (!includeAll && !ui.isNewerThanInstalled()) {
-            Log.d(TAG, "Build " + fileName + " is older than the installed build");
-            return null;
-        }
-
-        // fetch change log after checking whether to include this build to
-        // avoid useless network traffic
-        if (!ui.getChangeLogFile(this).exists()) {
-            fetchChangeLog(ui, obj.getString("changes"));
-        }
-
-        return ui;
-    }
-
-    private void fetchChangeLog(UpdateInfo info, String url) {
-        Log.d(TAG, "Getting change log for " + info + ", url " + url);
-
-        BufferedReader reader = null;
-        BufferedWriter writer = null;
-        boolean finished = false;
-
-        try {
-            HttpGet request = new HttpGet(URI.create(url));
-            addRequestHeaders(request);
-
-            HttpEntity entity = mHttpExecutor.execute(request);
-            writer = new BufferedWriter(new FileWriter(info.getChangeLogFile(this)));
-
+            response = client.execute(request);
+            HttpEntity entity = response.getEntity();
             if (entity != null) {
-                reader = new BufferedReader(new InputStreamReader(entity.getContent()), 2 * 1024);
-                boolean categoryMatch = false, hasData = false;
-                String line;
-
-                while ((line = reader.readLine()) != null) {
-                    line = line.trim();
-                    if (mHttpExecutor.isAborted()) {
-                        break;
-                    }
-                    if (line.isEmpty()) {
-                        continue;
-                    }
-
-                    if (line.startsWith("=")) {
-                        categoryMatch = !categoryMatch;
-                    } else if (categoryMatch) {
-                        if (hasData) {
-                            writer.append("<br />");
-                        }
-                        writer.append("<b><u>");
-                        writer.append(line);
-                        writer.append("</u></b>");
-                        writer.append("<br />");
-                        hasData = true;
-                    } else if (line.startsWith("*")) {
-                        writer.append("<br /><b>");
-                        writer.append(line.replaceAll("\\*", ""));
-                        writer.append("</b>");
-                        writer.append("<br />");
-                        hasData = true;
-                    } else {
-                        writer.append("&#8226;&nbsp;");
-                        writer.append(line);
-                        writer.append("<br />");
-                        hasData = true;
-                    }
-                }
-            } else {
-                writer.write("");
+                InputStream instream = entity.getContent();
+                result = Utils.convertStreamToString(instream);
+                instream.close();
             }
-            finished = true;
-        } catch (IOException e) {
-            Log.e(TAG, "Downloading change log for " + info + " failed", e);
-            // keeping finished at false will delete the partially written file below
-        } finally {
-            if (reader != null) {
-                try {
-                    reader.close();
-                } catch (IOException e) {
-                    // ignore, not much we can do anyway
-                }
-            }
-            if (writer != null) {
-                try {
-                    writer.close();
-                } catch (IOException e) {
-                    // ignore, not much we can do anyway
-                }
-            }
+        } catch (Exception e) {
+            e.printStackTrace();
         }
-
-        if (!finished) {
-            info.getChangeLogFile(this).delete();
-        }
+        return result;
     }
-
-    private static class HttpRequestExecutor {
-        private HttpClient mHttpClient;
-        private HttpRequestBase mRequest;
-        private boolean mAborted;
-
-        public HttpRequestExecutor() {
-            mHttpClient = new DefaultHttpClient();
-            mAborted = false;
-        }
-
-        public HttpEntity execute(HttpRequestBase request) throws IOException {
-            synchronized (this) {
-                mAborted = false;
-                mRequest = request;
-            }
-
-            HttpResponse response = mHttpClient.execute(request);
-            HttpEntity entity = null;
-
-            if (!mAborted && response.getStatusLine().getStatusCode() == HttpStatus.SC_OK) {
-                entity = response.getEntity();
-            }
-
-            synchronized (this) {
-                mRequest = null;
-            }
-
-            return entity;
-        }
-
-        public synchronized void abort() {
-            if (mRequest != null) {
-                mRequest.abort();
-            }
-            mAborted = true;
-        }
-
-        public synchronized boolean isAborted() {
-            return mAborted;
-        }
-    }*/
 }

@@ -7,7 +7,11 @@
  * or at https://www.gnu.org/licenses/gpl-2.0.txt
  */
 
-package com.vanir.updater.receiver;
+package org.teameos.updater.receiver;
+
+import org.teameos.updater.misc.Constants;
+import org.teameos.updater.service.UpdateCheckService;
+import org.teameos.updater.utils.Utils;
 
 import android.content.BroadcastReceiver;
 import android.content.Context;
@@ -17,12 +21,10 @@ import android.net.ConnectivityManager;
 import android.preference.PreferenceManager;
 import android.util.Log;
 
-import com.vanir.updater.misc.Constants;
-import com.vanir.updater.service.UpdateCheckService;
-import com.vanir.updater.utils.Utils;
 
 public class UpdateCheckReceiver extends BroadcastReceiver {
     private static final String TAG = "UpdateCheckReceiver";
+    private static final String ACTION_CHECK_FOR_UPDATES = "org.teameos.updater.ACTION_CHECK_FOR_UPDATES";
 
     @Override
     public void onReceive(Context context, Intent intent) {
@@ -34,7 +36,7 @@ public class UpdateCheckReceiver extends BroadcastReceiver {
         final String action = intent.getAction();
 
         if (updateFrequency == Constants.UPDATE_FREQ_NONE) {
-            if (!Intent.ACTION_CHECK_FOR_UPDATES.equals(action)) {
+            if (!ACTION_CHECK_FOR_UPDATES.equals(action)) {
                 return;
             }
         }
@@ -50,7 +52,7 @@ public class UpdateCheckReceiver extends BroadcastReceiver {
             // We just booted. Store the boot check state
             prefs.edit().putBoolean(Constants.BOOT_CHECK_COMPLETED, false).apply();
         }
-        if (Intent.ACTION_CHECK_FOR_UPDATES.equals(action)) {
+        if (ACTION_CHECK_FOR_UPDATES.equals(action)) {
             Log.i(TAG, "Received quicksettings check request");
             Intent i = new Intent(context, UpdateCheckService.class);
             i.setAction(UpdateCheckService.ACTION_CHECK);

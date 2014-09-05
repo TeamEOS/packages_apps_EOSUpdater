@@ -7,7 +7,7 @@
  * or at https://www.gnu.org/licenses/gpl-2.0.txt
  */
 
-package com.vanir.updater.receiver;
+package org.teameos.updater.receiver;
 
 import android.app.DownloadManager;
 import android.app.DownloadManager.Query;
@@ -26,26 +26,27 @@ import android.preference.PreferenceManager;
 import android.util.Log;
 import android.widget.Toast;
 
-import com.vanir.updater.R;
-import com.vanir.updater.UpdateApplication;
-import com.vanir.updater.UpdatesSettings;
-import com.vanir.updater.misc.Constants;
-import com.vanir.updater.misc.UpdateInfo;
-import com.vanir.updater.utils.MD5;
-import com.vanir.updater.utils.Utils;
+import org.teameos.updater.R;
 
 import java.io.File;
 import java.io.IOException;
 
+import org.teameos.updater.UpdateApplication;
+import org.teameos.updater.UpdatesSettings;
+import org.teameos.updater.misc.Constants;
+import org.teameos.updater.misc.UpdateInfo;
+import org.teameos.updater.utils.MD5;
+import org.teameos.updater.utils.Utils;
+
 public class DownloadReceiver extends BroadcastReceiver{
     private static final String TAG = "DownloadReceiver";
 
-    public static final String ACTION_START_DOWNLOAD = "com.vanir.vanirupdater.action.START_DOWNLOAD";
+    public static final String ACTION_START_DOWNLOAD = "org.teameos.updater.action.START_DOWNLOAD";
     public static final String EXTRA_UPDATE_INFO = "update_info";
 
-    public static final String ACTION_DOWNLOAD_STARTED = "com.vanir.vanirupdater.action.DOWNLOAD_STARTED";
+    public static final String ACTION_DOWNLOAD_STARTED = "org.teameos.updater.action.DOWNLOAD_STARTED";
 
-    private static final String ACTION_INSTALL_UPDATE = "com.vanir.vanirupdater.action.INSTALL_UPDATE";
+    private static final String ACTION_INSTALL_UPDATE = "org.teameos.updater.action.INSTALL_UPDATE";
     private static final String EXTRA_FILENAME = "filename";
 
     @Override

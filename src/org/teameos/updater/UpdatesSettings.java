@@ -7,7 +7,7 @@
  * or at https://www.gnu.org/licenses/gpl-2.0.txt
  */
 
-package com.vanir.updater;
+package org.teameos.updater;
 
 import android.app.ActionBar;
 import android.app.AlertDialog;
@@ -40,13 +40,7 @@ import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.vanir.updater.misc.Constants;
-import com.vanir.updater.misc.State;
-import com.vanir.updater.misc.UpdateInfo;
-import com.vanir.updater.receiver.DownloadReceiver;
-import com.vanir.updater.service.UpdateCheckService;
-import com.vanir.updater.utils.UpdateFilter;
-import com.vanir.updater.utils.Utils;
+import org.teameos.updater.R;
 
 import java.io.File;
 import java.io.IOException;
@@ -54,6 +48,14 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.Date;
 import java.util.LinkedList;
+
+import org.teameos.updater.misc.Constants;
+import org.teameos.updater.misc.State;
+import org.teameos.updater.misc.UpdateInfo;
+import org.teameos.updater.receiver.DownloadReceiver;
+import org.teameos.updater.service.UpdateCheckService;
+import org.teameos.updater.utils.UpdateFilter;
+import org.teameos.updater.utils.Utils;
 
 public class UpdatesSettings extends PreferenceActivity implements
         OnPreferenceChangeListener, UpdatePreference.OnReadyListener, UpdatePreference.OnActionListener {

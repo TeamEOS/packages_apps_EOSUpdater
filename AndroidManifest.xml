@@ -1,5 +1,5 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="com.vanir.updater"
+    package="org.teameos.updater"
     android:versionCode="3"
     android:versionName="2.1" >
 
@@ -22,20 +22,8 @@
         android:icon="@drawable/ic_launcher"
         android:theme="@style/VanirHoloTheme"
         android:label="@string/app_name"
-        android:name="com.vanir.updater.UpdateApplication"
+        android:name="org.teameos.updater.UpdateApplication"
         android:supportsRtl="true">
-
-        <service android:name="com.vanir.updater.service.VanirDashClockExtension"
-            android:icon="@drawable/ic_extension_cid"
-            android:label="@string/extension_label"
-            android:permission="com.google.android.apps.dashclock.permission.READ_EXTENSION_DATA">
-            <intent-filter>
-                <action android:name="com.google.android.apps.dashclock.Extension" />
-            </intent-filter>
-            <meta-data android:name="protocolVersion" android:value="1" />
-            <meta-data android:name="description"
-                android:value="@string/extension_description" />
-        </service>
 
         <activity
             android:name=".UpdatesSettings"
@@ -47,34 +35,29 @@
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="com.android.settings.SHORTCUT" />
+                <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
 
-        <service android:name="com.vanir.updater.service.UpdateCheckService" />
+        <service android:name="org.teameos.updater.service.UpdateCheckService" />
 
-        <receiver android:name="com.vanir.updater.receiver.UpdateCheckReceiver">
+        <receiver android:name="org.teameos.updater.receiver.UpdateCheckReceiver">
             <intent-filter>
                 <action android:name="android.intent.action.BOOT_COMPLETED" />
-                <action android:name="android.intent.CHECK_FOR_UPDATES" />
+                <action android:name="org.teameos.updater.ACTION_CHECK_FOR_UPDATES" />
                 <action android:name="android.net.conn.CONNECTIVITY_CHANGE" />
             </intent-filter>
         </receiver>
-        <receiver android:name="com.vanir.updater.receiver.DownloadReceiver">
+        <receiver android:name="org.teameos.updater.receiver.DownloadReceiver">
             <intent-filter>
                 <action android:name="android.intent.action.DOWNLOAD_COMPLETE"/>
-                <action android:name="com.vanir.vanirupdater.action.START_DOWNLOAD"/>
+                <action android:name="org.teameos.updater.action.START_DOWNLOAD"/>
             </intent-filter>
         </receiver>
 
-        <receiver android:name="com.vanir.updater.receiver.NotificationClickReceiver">
+        <receiver android:name="org.teameos.updater.receiver.NotificationClickReceiver">
             <intent-filter>
                 <action android:name="android.intent.action.DOWNLOAD_NOTIFICATION_CLICKED"/>
-            </intent-filter>
-        </receiver>
-
-        <receiver android:name="com.vanir.updater.receiver.CheckFinishReceiver">
-            <intent-filter>
-                <action android:name="com.vanir.vanirupdater.action.UPDATE_CHECK_FINISHED"/>
             </intent-filter>
         </receiver>
 

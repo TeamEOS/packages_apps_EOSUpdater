@@ -7,7 +7,8 @@
      or at https://www.gnu.org/licenses/gpl-2.0.txt
 -->
 <resources xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">
-    <string name="conf_nightly_server_url" translatable="false">http://www.emccann.net/nuclearmistake/VanirAOSPNightlies/</string>
-    <string name="conf_release_server_url" translatable="false">http://www.emccann.net/nuclearmistake/VanirAOSPRelease/</string>
+    <string name="conf_update_server_base_url" translatable="false">http://eos.cybolabs.co.uk/</string>
+    <string name="conf_update_server_file_url" translatable="false">api/v1/files/file_list/</string>
+    <string name="conf_changelog_url" translatable="false">http://localhost/changelog.xml</string>
     <bool name="alternateIsInternal">false</bool>
 </resources>
