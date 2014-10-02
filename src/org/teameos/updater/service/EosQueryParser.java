@@ -15,8 +15,8 @@ import org.teameos.updater.misc.UpdateInfo;
 import org.teameos.updater.utils.Utils;
 
 public class EosQueryParser extends BaseQueryParser {
-    private static final String BASE_URL = "http://eos.cybolabs.co.uk/";
-    private static final String FILE_LIST_PATH = "api/v1/files/file_list/";
+    private static final String BASE_URL = "http://api.teameos.org/";
+    private static final String FILE_LIST_PATH = "v1/files/file_list/";
 
     public EosQueryParser() {
     }

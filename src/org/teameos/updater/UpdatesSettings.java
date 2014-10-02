@@ -1,5 +1,6 @@
 /*
  * Copyright (C) 2012 The Vanir Project (DvTonder)
+ * Copyright (C) 2014 The Eos Project
  *
  * * Licensed under the GNU GPLv2 license
  *
@@ -60,6 +61,7 @@ import org.teameos.updater.utils.Utils;
 public class UpdatesSettings extends PreferenceActivity implements
         OnPreferenceChangeListener, UpdatePreference.OnReadyListener, UpdatePreference.OnActionListener {
     private static String TAG = "UpdatesSettings";
+    private static final boolean HIDE_UPDATE_TYPE = true;
 
     // intent extras
     public static final String EXTRA_UPDATE_LIST_UPDATED = "update_list_updated";
@@ -130,6 +132,12 @@ public class UpdatesSettings extends PreferenceActivity implements
         mUpdatesList = (PreferenceCategory) findPreference(UPDATES_CATEGORY);
         mUpdateCheck = (ListPreference) findPreference(Constants.UPDATE_CHECK_PREF);
         mUpdateType = (ListPreference) findPreference(Constants.UPDATE_TYPE_PREF);
+
+        // hide for now
+        if(HIDE_UPDATE_TYPE) {
+            getPreferenceScreen().removePreference(mUpdateType);
+            mUpdateType = null;
+        }
 
         // Load the stored preference data
         mPrefs = PreferenceManager.getDefaultSharedPreferences(this);
