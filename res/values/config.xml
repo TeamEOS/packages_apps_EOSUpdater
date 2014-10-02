@@ -7,8 +7,8 @@
      or at https://www.gnu.org/licenses/gpl-2.0.txt
 -->
 <resources xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">
-    <string name="conf_update_server_base_url" translatable="false">http://eos.cybolabs.co.uk/</string>
-    <string name="conf_update_server_file_url" translatable="false">api/v1/files/file_list/</string>
+    <string name="conf_update_server_base_url" translatable="false">http://api.teameos.org/</string>
+    <string name="conf_update_server_file_url" translatable="false">v1/files/file_list/</string>
     <string name="conf_changelog_url" translatable="false">http://localhost/changelog.xml</string>
     <string name="conf_project_update_list_class" translatable="false">"org.teameos.updater.service.EosQueryParser"</string>
     <bool name="alternateIsInternal">false</bool>
