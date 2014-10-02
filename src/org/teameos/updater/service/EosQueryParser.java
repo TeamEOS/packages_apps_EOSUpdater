@@ -14,11 +14,22 @@ import org.json.JSONObject;
 import org.teameos.updater.misc.UpdateInfo;
 import org.teameos.updater.utils.Utils;
 
+import org.teameos.updater.R;
+
+import android.content.Context;
+
 public class EosQueryParser extends BaseQueryParser {
-    private static final String BASE_URL = "http://api.teameos.org/";
-    private static final String FILE_LIST_PATH = "v1/files/file_list/";
+    private String base_url;
+    private String file_list_url;
 
     public EosQueryParser() {
+    }
+
+    @Override
+    public void init(Context context) {
+        super.init(context);
+        base_url = mContext.getString(R.string.conf_update_server_base_url);
+        file_list_url = mContext.getString(R.string.conf_update_server_file_url);
     }
 
     @Override
@@ -51,7 +62,7 @@ public class EosQueryParser extends BaseQueryParser {
                 // String version = file.getString("version");
                 // int sdk = file.getInt("sdk"); not on deck yet
                 int sdk = 19;
-                String url = BASE_URL + file.getString("url");
+                String url = base_url + file.getString("url");
                 // String size = file.getString("size");
                 // String dlCount = file.getString("download_count");
                 String md5 = file.getString("md5sum");
@@ -67,10 +78,10 @@ public class EosQueryParser extends BaseQueryParser {
         return infos;
     }
 
-    private static String getQueryUrl() {
+    private String getQueryUrl() {
         StringBuilder b = new StringBuilder();
-        b.append(BASE_URL);
-        b.append(FILE_LIST_PATH);
+        b.append(base_url);
+        b.append(file_list_url);
         b.append("?start=");
         b.append(0); // start with newest build
         b.append("&size=");
