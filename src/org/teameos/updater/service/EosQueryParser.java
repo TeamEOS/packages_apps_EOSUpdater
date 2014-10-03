@@ -57,7 +57,15 @@ public class EosQueryParser extends BaseQueryParser {
                 return infos; // empty list is better than null
             }
             JSONObject baseObj = new JSONObject(result);
+
+            String serverMsg = baseObj.getString("result");
             JSONObject data = baseObj.getJSONObject("data");
+            if ("failed".equals(serverMsg)) {
+                String theFail = data.getString("message");
+                log("Server returned fail message: " + theFail);
+                return infos;
+            }
+
             JSONArray fileList = data.getJSONArray("file_list");
             for (int i = 0; i < fileList.length(); i++) {
                 JSONObject file = fileList.getJSONObject(i);
