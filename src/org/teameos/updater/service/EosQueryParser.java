@@ -46,7 +46,7 @@ public class EosQueryParser extends BaseQueryParser {
                 instream.close();
             }
             if (result == null) {
-                return null;
+                return infos;
             }
             JSONObject baseObj = new JSONObject(result);
             JSONObject data = baseObj.getJSONObject("data");
