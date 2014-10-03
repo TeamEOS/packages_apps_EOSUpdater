@@ -43,6 +43,7 @@ import org.json.JSONObject;
 import org.teameos.updater.UpdateApplication;
 import org.teameos.updater.UpdatesSettings;
 import org.teameos.updater.misc.Constants;
+import org.teameos.updater.misc.Logger;
 import org.teameos.updater.misc.State;
 import org.teameos.updater.misc.UpdateInfo;
 import org.teameos.updater.receiver.DownloadReceiver;
@@ -144,31 +145,31 @@ public class UpdateCheckService extends IntentService {
 
         // load our query parser class
         final String clsName = getString(R.string.conf_project_update_list_class);
-        Log.i(TAG, "trying to load class " + String.valueOf(clsName));
+        log("trying to load class " + String.valueOf(clsName));
         if (clsName == null || clsName.length() == 0) {
-            Log.e(TAG, "Could not get query parser class name from config");
+            log("Could not get query parser class name from config");
             return;
         }
         Class<?> cls = null;
         try {
             cls = getClassLoader().loadClass(clsName);
-            Log.i(TAG, "Sucessfully loaded class " + String.valueOf(clsName));
+            log("Sucessfully loaded class " + String.valueOf(clsName));
         } catch (Throwable t) {
-            Log.e(TAG, "Could not load query parser class");
+            log("Could not load query parser class");
             return;
         }
         try {
         mParser = (BaseQueryParser) cls.newInstance();
-        Log.i(TAG, "Trying to initialize " + String.valueOf(clsName));
+        log("Trying to initialize " + String.valueOf(clsName));
         } catch (Exception e){
-            Log.i(TAG, "Failed to initialize " + String.valueOf(clsName));
+            log("Failed to initialize " + String.valueOf(clsName));
             return;
         }
         if (mParser == null) {
-            Log.e(TAG, "Could not create instance query parser class");
+            log("Could not create instance query parser class");
             return;
         }
-        Log.i(TAG, "Sucessfully initialized class " + String.valueOf(clsName));
+        log("Sucessfully initialized class " + String.valueOf(clsName));
         mParser.init(this);
 
         // Start the update check
@@ -328,5 +329,9 @@ public class UpdateCheckService extends IntentService {
         State.saveState(this, updates);
 
         return updates;
+    }
+
+    private static void log(String msg) {
+        Logger.log(TAG, msg);
     }
 }

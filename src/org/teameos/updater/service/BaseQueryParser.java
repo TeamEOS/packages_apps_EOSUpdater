@@ -10,6 +10,7 @@ import org.apache.http.HttpStatus;
 import org.apache.http.client.HttpClient;
 import org.apache.http.client.methods.HttpRequestBase;
 import org.apache.http.impl.client.DefaultHttpClient;
+import org.teameos.updater.misc.Logger;
 import org.teameos.updater.misc.UpdateInfo;
 import org.teameos.updater.utils.Utils;
 
@@ -42,7 +43,7 @@ public abstract class BaseQueryParser {
 
     protected HttpEntity executeQuery(HttpRequestBase request) {
         if (request == null) {
-            Log.e(TAG, "Null executeQuery request from subclass");
+            log("Null executeQuery request from subclass");
             return null;
         }
         if (mExecutor == null) {
@@ -53,7 +54,7 @@ public abstract class BaseQueryParser {
         } catch (IOException e) {
             // TODO Auto-generated catch block
             e.printStackTrace();
-            Log.e(TAG, "Error executing query");
+            log("Error executing query");
             return null;
         }
     }
@@ -119,5 +120,9 @@ public abstract class BaseQueryParser {
         synchronized boolean isAborted() {
             return mAborted;
         }
+    }
+
+    private static void log(String msg) {
+        Logger.log(TAG, msg);
     }
 }

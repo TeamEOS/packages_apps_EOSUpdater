@@ -11,14 +11,19 @@ import org.apache.http.HttpEntity;
 import org.apache.http.client.methods.HttpGet;
 import org.json.JSONArray;
 import org.json.JSONObject;
+import org.teameos.updater.misc.Logger;
 import org.teameos.updater.misc.UpdateInfo;
 import org.teameos.updater.utils.Utils;
 
 import org.teameos.updater.R;
 
 import android.content.Context;
+import android.util.Log;
 
 public class EosQueryParser extends BaseQueryParser {
+    private static final String TAG = EosQueryParser.class.getSimpleName();
+    private static final boolean DEBUG = true;
+
     private String base_url;
     private String file_list_url;
 
@@ -36,7 +41,9 @@ public class EosQueryParser extends BaseQueryParser {
     public LinkedList<UpdateInfo> getUpdateInfo() {
         LinkedList<UpdateInfo> infos = new LinkedList<UpdateInfo>();
         try {
-            HttpGet request = new HttpGet(getQueryUrl());
+            String query = getQueryUrl();
+            log("Attempting query with " + query);
+            HttpGet request = new HttpGet(query);
             addRequestHeaders(request);
             HttpEntity entity = executeQuery(request);
             String result = null;
@@ -46,29 +53,22 @@ public class EosQueryParser extends BaseQueryParser {
                 instream.close();
             }
             if (result == null) {
-                return infos;
+                log("Raw query result was null. Returning empty list");
+                return infos; // empty list is better than null
             }
             JSONObject baseObj = new JSONObject(result);
             JSONObject data = baseObj.getJSONObject("data");
             JSONArray fileList = data.getJSONArray("file_list");
             for (int i = 0; i < fileList.length(); i++) {
                 JSONObject file = fileList.getJSONObject(i);
-                int id = file.getInt("id");
-                // String date = file.getString("date");
                 long epoch = file.getLong("epoch");
-                // String owner = file.getString("owner");
-                // String device = file.getString("device");
                 String name = file.getString("name");
-                // String version = file.getString("version");
-                // int sdk = file.getInt("sdk"); not on deck yet
                 int sdk = 19;
                 String url = base_url + file.getString("url");
-                // String size = file.getString("size");
-                // String dlCount = file.getString("download_count");
                 String md5 = file.getString("md5sum");
-                // String oldVersion = file.getString("old_version");
                 UpdateInfo info = new UpdateInfo(name, epoch, sdk, url, md5,
                         UpdateInfo.Type.NIGHTLY);
+                log("File " + String.valueOf(i) + " : " + file.toString());
                 infos.add(info);
             }
 
@@ -82,14 +82,19 @@ public class EosQueryParser extends BaseQueryParser {
         StringBuilder b = new StringBuilder();
         b.append(base_url);
         b.append(file_list_url);
-        b.append("?start=");
-        b.append(0); // start with newest build
+        b.append("?owner=");
+        b.append("eos");
         b.append("&size=");
         b.append(5); // max history = 5
         b.append("&device=");
         b.append(Utils.getDeviceType());
-        b.append("&info=device,id,date,epoch,owner,name,version,url,size,download_count,md5sum,old_version");
-        return b.toString();
+        if (Logger.DEBUG) {
+            b.append("&info=device,id,date,epoch,owner,name,version,url,size,download_count,md5sum,old_version");
+        } else {
+            b.append("&info=epoch,url,md5sum");
+        }
+        String url = b.toString();
+        return url;
     }
 
     private static String convertStreamToString(InputStream is) {
@@ -111,6 +116,10 @@ public class EosQueryParser extends BaseQueryParser {
             }
         }
         return sb.toString();
+    }
+
+    private static void log(String msg) {
+        Logger.log(TAG, msg);
     }
 
 }
