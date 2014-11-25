@@ -18,6 +18,7 @@ import org.teameos.updater.utils.Utils;
 import org.teameos.updater.R;
 
 import android.content.Context;
+import android.os.SystemProperties;
 import android.util.Log;
 
 public class EosQueryParser extends BaseQueryParser {
@@ -71,7 +72,7 @@ public class EosQueryParser extends BaseQueryParser {
                 JSONObject file = fileList.getJSONObject(i);
                 long epoch = file.getLong("epoch");
                 String name = file.getString("name");
-                int sdk = 19;
+                int sdk = Integer.parseInt(SystemProperties.get("ro.build.version.sdk", "21"));
                 String url = base_url + file.getString("url");
                 String md5 = file.getString("md5sum");
                 UpdateInfo info = new UpdateInfo(name, epoch, sdk, url, md5,
@@ -93,7 +94,7 @@ public class EosQueryParser extends BaseQueryParser {
         b.append("?owner=");
         b.append("eos");
         b.append("&size=");
-        b.append(5); // max history = 5
+        b.append(1);
         b.append("&device=");
         b.append(Utils.getDeviceType());
         if (Logger.DEBUG) {
