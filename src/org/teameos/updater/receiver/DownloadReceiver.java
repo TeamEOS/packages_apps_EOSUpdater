@@ -94,7 +94,7 @@ public class DownloadReceiver extends BroadcastReceiver{
         }
         request.addRequestHeader("Cache-Control", "no-cache");
 
-        request.setTitle(context.getString(R.string.app_name));
+        request.setTitle(context.getString(R.string.eos_app_name));
         request.setDestinationUri(Uri.parse(fullFilePath));
         request.setAllowedOverRoaming(false);
         request.setVisibleInDownloadsUi(false);
