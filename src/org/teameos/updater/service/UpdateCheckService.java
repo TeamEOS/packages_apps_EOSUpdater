@@ -1,5 +1,6 @@
 /*
  * Copyright (C) 2012 The Vanir Project
+ * Copyright (C) 2015 The TeamEos Project
  *
  * * Licensed under the GNU GPLv2 license
  *
@@ -17,8 +18,6 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.res.Resources;
-import android.media.RingtoneManager;
-import android.net.Uri;
 import android.os.Parcelable;
 import android.preference.PreferenceManager;
 import android.text.TextUtils;
@@ -31,14 +30,10 @@ import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
 import org.apache.http.HttpStatus;
 import org.apache.http.client.HttpClient;
-import org.apache.http.client.methods.HttpPost;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpRequestBase;
-import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.DefaultHttpClient;
-import org.apache.http.util.EntityUtils;
 import org.json.JSONArray;
-import org.json.JSONException;
 import org.json.JSONObject;
 import org.teameos.updater.UpdateApplication;
 import org.teameos.updater.UpdatesSettings;
@@ -49,17 +44,11 @@ import org.teameos.updater.misc.UpdateInfo;
 import org.teameos.updater.receiver.DownloadReceiver;
 import org.teameos.updater.utils.Utils;
 
-import java.io.BufferedReader;
-import java.io.BufferedWriter;
-import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.net.URI;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.Date;
-import java.util.HashMap;
 import java.util.LinkedList;
 
 public class UpdateCheckService extends IntentService {
@@ -85,9 +74,7 @@ public class UpdateCheckService extends IntentService {
     // max. number of updates listed in the expanded notification
     private static final int EXPANDED_NOTIF_UPDATE_COUNT = 4;
 
-    //private HttpRequestExecutor mHttpExecutor;
-    private HttpClient client = new DefaultHttpClient();
-    private BaseQueryParser mParser;
+    private static final HttpRequestExecutor mHttpExecutor = new HttpRequestExecutor();
 
     public UpdateCheckService() {
         super("UpdateCheckService");
@@ -96,11 +83,11 @@ public class UpdateCheckService extends IntentService {
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
         if (TextUtils.equals(intent.getAction(), ACTION_CANCEL_CHECK)) {
-            /*synchronized (this) {
+            synchronized (this) {
                 if (mHttpExecutor != null) {
                     mHttpExecutor.abort();
                 }
-            }*/
+            }
 
             return START_NOT_STICKY;
         }
@@ -142,35 +129,6 @@ public class UpdateCheckService extends IntentService {
             // Trigger the progressbar notification
             nm.notify(progressID, progress.build());
         }
-
-        // load our query parser class
-        final String clsName = getString(R.string.conf_project_update_list_class);
-        log("trying to load class " + String.valueOf(clsName));
-        if (clsName == null || clsName.length() == 0) {
-            log("Could not get query parser class name from config");
-            return;
-        }
-        Class<?> cls = null;
-        try {
-            cls = getClassLoader().loadClass(clsName);
-            log("Sucessfully loaded class " + String.valueOf(clsName));
-        } catch (Throwable t) {
-            log("Could not load query parser class");
-            return;
-        }
-        try {
-        mParser = (BaseQueryParser) cls.newInstance();
-        log("Trying to initialize " + String.valueOf(clsName));
-        } catch (Exception e){
-            log("Failed to initialize " + String.valueOf(clsName));
-            return;
-        }
-        if (mParser == null) {
-            log("Could not create instance query parser class");
-            return;
-        }
-        log("Sucessfully initialized class " + String.valueOf(clsName));
-        mParser.init(this);
 
         // Start the update check
         Intent finishedIntent = new Intent(ACTION_CHECK_FINISHED);
@@ -309,7 +267,7 @@ public class UpdateCheckService extends IntentService {
         int updateType = prefs.getInt(Constants.UPDATE_TYPE_PREF, 0);
 
         LinkedList<UpdateInfo> lastUpdates = State.loadState(this);
-        LinkedList<UpdateInfo> updates = mParser.getUpdateInfo();
+        LinkedList<UpdateInfo> updates = getUpdateInfo();
 
         // initial app state handling
         // if State.loadState is null or empty, don't allow
@@ -343,6 +301,95 @@ public class UpdateCheckService extends IntentService {
         State.saveState(this, updates);
 
         return updates;
+    }
+
+    private LinkedList<UpdateInfo> getUpdateInfo() {
+        LinkedList<UpdateInfo> infos = new LinkedList<UpdateInfo>();
+        try {
+            String query = Utils.getQueryUrl();
+            log("Attempting query with " + query);
+            HttpGet request = new HttpGet(query);
+            String userAgent = Utils.getUserAgentString(this);
+            if (userAgent != null) {
+                request.addHeader("User-Agent", userAgent);
+            }
+            request.addHeader("Cache-Control", "no-cache");
+            HttpEntity entity = null;
+            try {
+                entity = mHttpExecutor.execute(request);
+            } catch (IOException e) {
+                e.printStackTrace();
+                log("Error executing query");
+            }
+            if (entity == null) {
+                return infos;
+            }
+            String result = null;
+            InputStream instream = entity.getContent();
+            result = Utils.convertStreamToString(instream);
+            instream.close();
+            if (result == null) {
+                log("Raw query result was null. Returning empty list");
+                return infos; // empty list is better than null
+            }
+            JSONObject baseObj = new JSONObject(result);
+
+            String serverMsg = baseObj.getString("result");
+            JSONObject data = baseObj.getJSONObject("data");
+            if ("failed".equals(serverMsg)) {
+                String theFail = data.getString("message");
+                log("Server returned fail message: " + theFail);
+                return infos;
+            }
+
+            JSONArray fileList = data.getJSONArray("file_list");
+            for (int i = 0; i < fileList.length(); i++) {
+                JSONObject file = fileList.getJSONObject(i);
+                long epoch = file.getLong("epoch");
+                String name = file.getString("name");
+                int sdk = Utils.getInstalledApiLevel();
+                String url = Utils.getBaseServerUrl() + file.getString("url");
+                String md5 = file.getString("md5sum");
+                UpdateInfo info = new UpdateInfo(name, epoch, sdk, url, md5,
+                        UpdateInfo.Type.NIGHTLY);
+                log("File " + String.valueOf(i) + " : " + file.toString());
+                infos.add(info);
+            }
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return infos;
+    }
+
+    private static final class HttpRequestExecutor {
+        private HttpRequestBase mRequest;
+        private HttpClient mClient = new DefaultHttpClient();
+
+        HttpEntity execute(HttpRequestBase request) throws IOException {
+            synchronized (this) {
+                mRequest = request;
+            }
+
+            HttpResponse response = mClient.execute(request);
+            HttpEntity entity = null;
+
+            if (response.getStatusLine().getStatusCode() == HttpStatus.SC_OK) {
+                entity = response.getEntity();
+            }
+
+            synchronized (this) {
+                mRequest = null;
+            }
+
+            return entity;
+        }
+
+        synchronized void abort() {
+            if (mRequest != null) {
+                mRequest.abort();
+            }
+        }
     }
 
     private static void log(String msg) {
