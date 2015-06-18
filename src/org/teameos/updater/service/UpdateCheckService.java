@@ -311,6 +311,20 @@ public class UpdateCheckService extends IntentService {
         LinkedList<UpdateInfo> lastUpdates = State.loadState(this);
         LinkedList<UpdateInfo> updates = mParser.getUpdateInfo();
 
+        // initial app state handling
+        // if State.loadState is null or empty, don't allow
+        // any available updates that are same date or older than
+        // current installed version.
+        if (lastUpdates == null || lastUpdates.isEmpty()) {
+            LinkedList<UpdateInfo> updatesToRemove = new LinkedList<UpdateInfo>();
+            for (UpdateInfo ui : updates) {
+                if (!ui.isNewerThanInstalled()) {
+                    updatesToRemove.add(ui);
+                }
+            }
+            updates.removeAll(updatesToRemove);
+        }
+
         int newUpdates = 0, realUpdates = 0;
         for (UpdateInfo ui : updates) {
             if (!lastUpdates.contains(ui)) {
