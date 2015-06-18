@@ -205,7 +205,7 @@ public class DownloadReceiver extends BroadcastReceiver{
             PendingIntent contentIntent = PendingIntent.getActivity(context, 1,
                     updateIntent, PendingIntent.FLAG_ONE_SHOT | PendingIntent.FLAG_UPDATE_CURRENT);
             Notification.Builder builder = new Notification.Builder(context)
-                    .setSmallIcon(R.drawable.cm_updater)
+                    .setSmallIcon(R.drawable.ic_system_update)
                     .setWhen(System.currentTimeMillis())
                     .setContentIntent(contentIntent)
                     .setAutoCancel(true);

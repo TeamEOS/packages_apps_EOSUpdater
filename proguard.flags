@@ -1,5 +1,3 @@
 -keep class org.teameos.updater.UpdatesSettings {
   *;
 }
-
--keep public class * extends org.teameos.updater.service.BaseQueryParser

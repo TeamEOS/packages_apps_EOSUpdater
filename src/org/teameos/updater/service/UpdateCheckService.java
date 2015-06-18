@@ -121,7 +121,7 @@ public class UpdateCheckService extends IntentService {
 
         if (fromQuicksettings) {
             Notification.Builder progress = new Notification.Builder(this)
-                    .setSmallIcon(R.drawable.cm_updater)
+                    .setSmallIcon(R.drawable.ic_system_update)
                     .setWhen(System.currentTimeMillis())
                     .setTicker(res.getString(R.string.checking_for_updates))
                     .setContentTitle(res.getString(R.string.checking_for_updates))
@@ -169,7 +169,7 @@ public class UpdateCheckService extends IntentService {
 
             // Get the notification ready
             Notification.Builder builder = new Notification.Builder(this)
-                    .setSmallIcon(R.drawable.cm_updater)
+                    .setSmallIcon(R.drawable.ic_system_update)
                     .setWhen(System.currentTimeMillis())
                     .setTicker(res.getString(R.string.no_updates_found))
                     .setContentTitle(res.getString(R.string.no_updates_found))
@@ -196,7 +196,7 @@ public class UpdateCheckService extends IntentService {
 
             // Get the notification ready
             Notification.Builder builder = new Notification.Builder(this)
-                    .setSmallIcon(R.drawable.cm_updater)
+                    .setSmallIcon(R.drawable.ic_system_update)
                     .setWhen(System.currentTimeMillis())
                     .setTicker(res.getString(R.string.not_new_updates_found_ticker))
                     .setContentTitle(res.getString(R.string.not_new_updates_found_title))

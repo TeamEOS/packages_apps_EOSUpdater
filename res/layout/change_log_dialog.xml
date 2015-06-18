@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Copyright (C) 2013 The Vanir Project
+<!-- Copyright (C) 2013 The TeamEos Project
 
      Licensed under the GNU GPLv2 license
 
@@ -33,7 +33,7 @@
 
     </LinearLayout>
 
-    <com.vanir.updater.NotifyingWebView
+    <org.teameos.updater.NotifyingWebView
         android:id="@+id/changelog"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
