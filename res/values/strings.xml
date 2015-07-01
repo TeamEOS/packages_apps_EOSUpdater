@@ -10,7 +10,7 @@
 
     <!-- General strings -->
     <string name="eos_app_name">Eos Updater</string>
-    <string name="display_name">Updates</string>
+    <string name="display_name">Eos updates</string>
     <string name="unknown">Unknown</string>
 
     <!-- Menu and dialog box strings -->
