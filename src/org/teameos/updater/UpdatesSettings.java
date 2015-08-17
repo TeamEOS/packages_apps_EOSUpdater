@@ -579,7 +579,7 @@ public class UpdatesSettings extends PreferenceActivity implements
         mUpdatesList.removeAll();
 
         // Convert the installed version name to the associated filename
-        String installedZip = "vanir_" + Utils.getInstalledVersion() + ".zip";
+        String installedZip = "eos-" + Utils.getInstalledVersion() + ".zip";
 
         // Add the updates
         for (UpdateInfo ui : updates) {

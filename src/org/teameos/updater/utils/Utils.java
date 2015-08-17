@@ -71,7 +71,7 @@ public class Utils {
     }
 
     public static String getInstalledVersion() {
-        return SystemProperties.get("ro.modversion");
+        return SystemProperties.get("ro.eos.version");
     }
 
     public static int getInstalledApiLevel() {
@@ -268,7 +268,7 @@ public class Utils {
         b.append("?owner=");
         b.append("eos");
         b.append("&size=");
-        b.append(5);  // go back to returning last 5 builds
+        b.append(1);
         b.append("&device=");
         b.append(Utils.getDeviceType());
         if (Logger.DEBUG) {
