@@ -175,7 +175,7 @@ public class UpdatesSettings extends PreferenceActivity implements
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         menu.add(0, MENU_REFRESH, 0, R.string.menu_refresh)
-                .setIcon(R.drawable.ic_menu_refresh)
+                .setIcon(com.android.internal.R.drawable.ic_menu_refresh)
                 .setShowAsActionFlags(MenuItem.SHOW_AS_ACTION_ALWAYS
                         | MenuItem.SHOW_AS_ACTION_WITH_TEXT);
 
